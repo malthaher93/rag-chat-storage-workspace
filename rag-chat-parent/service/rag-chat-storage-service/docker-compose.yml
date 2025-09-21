@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  app:
+    image: rag-chat-storage-app:11
+    container_name: rag-chat-storage-app
+    build:
+      context: .           
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"     
+    env_file:
+      - .env
+    restart: always       
+    depends_on:
+      - database
+  
+  database:
+    image: postgres:15
+    container_name: postgresql
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: ragchat
+    ports:
+      - "5432:5432"
+  
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: test@test.com
+      PGADMIN_DEFAULT_PASSWORD: test
+    ports:
+      - "5050:80"
+    restart: always
+    depends_on:
+      - database
+    

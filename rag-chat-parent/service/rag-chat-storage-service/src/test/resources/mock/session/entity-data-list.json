@@ -1,0 +1,10 @@
+[
+{
+      		"id": 1,
+      		"sessionId": "TEST-XXXX",	
+      		"title": "Test",
+      		"favorite": false,
+      		"userId" : "test-01"
+}
+
+]

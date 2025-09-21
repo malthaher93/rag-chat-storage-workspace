@@ -1,0 +1,6 @@
+{
+    "userId": "test-01",
+    "apiKey": "TEST-XXXX",
+    "active": true,
+    "roles": ["USER"]
+}

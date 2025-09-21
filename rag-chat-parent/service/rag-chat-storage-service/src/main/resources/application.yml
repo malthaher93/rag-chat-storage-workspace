@@ -1,0 +1,55 @@
+server:
+  servlet:
+    context-path: /
+
+info:
+  app:
+    version: ${spring.application.version}     
+
+#profile settings
+spring:
+  profiles:
+    active: @activeProfile@
+  application:
+    name: @project.artifactId@
+    description: @project.description@
+    version: @project.version@
+  thymeleaf:
+    enabled: false
+
+  datasource:
+    driver-class-name: org.postgresql.Driver  
+# HikariCP settings
+    hikari:
+      maximumPoolSize: 10
+      idleTimeout: 600000
+      maxLifetime: 2000000
+      connectionTimeout: 30000
+      poolName: NBHikariPool
+      data-source-properties:
+        cachePrepStmts: true
+# JPA settings
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        cache.use_second_level_cache: true
+        cache.region.factory_class: org.hibernate.cache.ehcache.EhCacheRegionFactory
+        cache.use_query_cache: true
+        cache.ehcache.missing_cache_strategy: create
+
+# actuator settings
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+        exclude: shutdown, sessions, env
+  endpoint:
+    health:
+      show-details: always
+    logfile:
+      external-file: logs/${spring.application.name}.log
