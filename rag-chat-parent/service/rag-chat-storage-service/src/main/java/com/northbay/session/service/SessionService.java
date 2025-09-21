@@ -21,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 import com.northbay.exception.ResourceNotFoundException;
 import com.northbay.model.ApiUserType;
 import com.northbay.model.GenericResponseType;
+import com.northbay.service.CachingService;
 import com.northbay.session.entity.Session;
 import com.northbay.session.mapper.SessionMapper;
 import com.northbay.session.model.SessionType;
@@ -36,6 +37,7 @@ public class SessionService {
 
 	private final SessionRepository sessionRepository;
 	private final SessionMapper sessionMapper;
+	private final CachingService cachingService;
 
 	/***
 	 * create a new session
@@ -101,7 +103,8 @@ public class SessionService {
 	public GenericResponseType<?> delete(@NotNull(message = FIELD_IS_MANDATORY) ApiUserType user, 
 			@NotBlank(message = FIELD_IS_MANDATORY) String sessionId) {
 		
-		sessionRepository.delete(findByUserIdAndSessionId(user, sessionId));	
+		sessionRepository.delete(findByUserIdAndSessionId(user, sessionId));
+		cachingService.evictAll();
 		return ResponseUtil.getInfoGenericResponse(HttpStatus.OK, SUCESSFULLY_DELETED);
 	}
 	
