@@ -24,12 +24,9 @@ public class ApiUserType implements UserDetails {
 	 */
 	private static final long serialVersionUID = -6802596182100063442L;
 
-	private String userId;
 	
 	private String apiKey;
-
-	private boolean active;
-
+	
 	private Collection<AuthorizationRoleType> roles;
 
 	@Override
@@ -44,7 +41,7 @@ public class ApiUserType implements UserDetails {
 
 	@Override
 	public String getUsername() {
-		return userId;
+		return apiKey;
 	}
 
 	@Override
@@ -64,7 +61,7 @@ public class ApiUserType implements UserDetails {
 
 	@Override
 	public boolean isEnabled() {
-		return active;
+		return true;
 	}
 	
 }

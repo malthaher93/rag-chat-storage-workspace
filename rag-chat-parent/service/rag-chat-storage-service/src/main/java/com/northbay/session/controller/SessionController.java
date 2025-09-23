@@ -30,7 +30,6 @@ import static com.northbay.session.constant.SessionConstant.UPDATE_SESSION_API_D
 
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -42,13 +41,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.northbay.common.controller.AbstractChatController;
-import com.northbay.model.ApiUserType;
 import com.northbay.model.GenericResponseType;
 import com.northbay.session.model.SessionType;
 import com.northbay.session.service.SessionService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -75,8 +72,8 @@ public class SessionController extends AbstractChatController {
 			schema = @Schema(implementation = SessionType.class))))
 	@PostMapping
 	@PreAuthorize(SESSION_API_AUTH)
-	public SessionType create(@Parameter(hidden = true) @AuthenticationPrincipal ApiUserType authenticatedUser, @RequestBody SessionType request) {
-		return sessionService.create(authenticatedUser, request);
+	public SessionType create(@RequestBody SessionType request) {
+		return sessionService.create(request);
 	}
 
 	@Operation(summary = FIND_ALL_SESSIONS_API, 
@@ -87,10 +84,9 @@ public class SessionController extends AbstractChatController {
 			schema = @Schema(implementation = SessionType.class)) }) })
 	@GetMapping
 	@PreAuthorize(SESSION_API_AUTH)
-	public Page<SessionType> findAll(@Parameter(hidden = true) @AuthenticationPrincipal ApiUserType authenticatedUser,		
-			@RequestParam(required = false, defaultValue = "1") Integer pageIndex, 
+	public Page<SessionType> findAll(@RequestParam(required = false, defaultValue = "1") Integer pageIndex, 
 			@RequestParam(required = false, defaultValue = "10") Integer pageSize) {
-		return sessionService.findAll(authenticatedUser, pageIndex, pageSize);
+		return sessionService.findAll(pageIndex, pageSize);
 	}
 
 	@Operation(summary = FIND_SESSION_BY_ID_API, 
@@ -101,9 +97,8 @@ public class SessionController extends AbstractChatController {
 			schema = @Schema(implementation = SessionType.class)) }) })
 	@GetMapping(FIND_SESSION_BY_ID_API_PATH)
 	@PreAuthorize(SESSION_API_AUTH)
-	public SessionType findById(@Parameter(hidden = true) @AuthenticationPrincipal ApiUserType authenticatedUser,		
-			@PathVariable String sessionId) {
-		return sessionService.findById(authenticatedUser, sessionId);
+	public SessionType findById(@PathVariable String sessionId) {
+		return sessionService.findById(sessionId);
 	}
 
 	@Operation(summary = UPDATE_SESSION_API, 
@@ -118,10 +113,8 @@ public class SessionController extends AbstractChatController {
 			schema = @Schema(implementation = SessionType.class))))
 	@PutMapping(FIND_SESSION_BY_ID_API_PATH)
 	@PreAuthorize(SESSION_API_AUTH)
-	public SessionType update(@Parameter(hidden = true) @AuthenticationPrincipal ApiUserType authenticatedUser, 
-			@RequestBody SessionType request,
-			@PathVariable String sessionId) {
-		return sessionService.update(authenticatedUser, sessionId, request);
+	public SessionType update(@RequestBody SessionType request,	@PathVariable String sessionId) {
+		return sessionService.update(sessionId, request);
 	}
 
 	@Operation(summary = DELETE_SESSION_API, 
@@ -133,9 +126,8 @@ public class SessionController extends AbstractChatController {
 			schema = @Schema(implementation = GenericResponseType.class)) }) })
 	@DeleteMapping(FIND_SESSION_BY_ID_API_PATH)
 	@PreAuthorize(SESSION_API_AUTH)
-	public GenericResponseType<?> delete(@Parameter(hidden = true) @AuthenticationPrincipal ApiUserType authenticatedUser, 
-			@PathVariable String sessionId) {
-		return sessionService.delete(authenticatedUser, sessionId);
+	public GenericResponseType<?> delete(@PathVariable String sessionId) {
+		return sessionService.delete(sessionId);
 	}
 
 	@Operation(summary = TOGGLE_FAVORITE_SESSION_API, 
@@ -147,8 +139,7 @@ public class SessionController extends AbstractChatController {
 			schema = @Schema(implementation = SessionType.class)) }) })
 	@PatchMapping(TOGGLE_FAVORITE_SESSION_API_PATH)
 	@PreAuthorize(SESSION_API_AUTH)
-	public SessionType toggleFavorite(@Parameter(hidden = true) @AuthenticationPrincipal ApiUserType authenticatedUser, 
-			@PathVariable String sessionId) {
-		return sessionService.toggleFavorite(authenticatedUser, sessionId);
+	public SessionType toggleFavorite(@PathVariable String sessionId) {
+		return sessionService.toggleFavorite(sessionId);
 	}
 }

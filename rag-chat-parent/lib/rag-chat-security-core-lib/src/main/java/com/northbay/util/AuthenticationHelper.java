@@ -75,11 +75,9 @@ public class AuthenticationHelper {
 		return new ApiKeyAuthenticationTokenType(apiKey);
 	}
 	
-	public static ApiUserType getApiUserType(String[] user) {
+	public static ApiUserType getApiUserType(String apiKey) {
 		return ApiUserType.builder()
-				.userId(user[1])
-				.active(true)
-				.apiKey(user[0])
+				.apiKey(apiKey)
 				.roles(asList(USER))
 				.build();
 	}

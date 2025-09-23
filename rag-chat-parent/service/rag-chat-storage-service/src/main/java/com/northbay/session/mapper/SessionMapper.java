@@ -2,13 +2,10 @@ package com.northbay.session.mapper;
 import static org.mapstruct.NullValueCheckStrategy.ALWAYS;
 import static org.mapstruct.NullValuePropertyMappingStrategy.IGNORE;
 
-import java.util.UUID;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.northbay.common.mapper.DataTypeMapper;
-import com.northbay.model.ApiUserType;
 import com.northbay.session.entity.Session;
 import com.northbay.session.model.SessionType;
 
@@ -19,18 +16,10 @@ public interface SessionMapper extends DataTypeMapper<Session, SessionType> {
 
 	@Override
 	@Mapping(target = "sessionId", source = "id")
-	@Mapping(target = "userId", ignore = true)
 	@Mapping(target = "messageList", ignore = true)
 	Session toEntity(SessionType dto);
 	
 	@Mapping(target = "id", source = "sessionId")
 	SessionType toModel(Session entity);
-	
-	
-	default Session toEntity(SessionType dto, ApiUserType user) {
-		Session session = toEntity(dto);
-		session.setUserId(user.getUserId());
-		session.setSessionId(UUID.randomUUID().toString());		
-		return session;
-	}
+
 }

@@ -26,8 +26,8 @@ import org.springframework.test.context.ContextConfiguration;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.northbay.configuration.ObjectMapperConfig;
 import com.northbay.exception.ResourceNotFoundException;
-import com.northbay.model.ApiUserType;
 import com.northbay.model.GenericResponseType;
+import com.northbay.service.CachingService;
 import com.northbay.session.entity.Session;
 import com.northbay.session.mapper.SessionMapper;
 import com.northbay.session.model.SessionType;
@@ -37,7 +37,7 @@ import com.northbay.util.JsonFileReaderUtil;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@ContextConfiguration(classes = {ValidationAutoConfiguration.class, SessionService.class, JsonFileReaderUtil.class, ObjectMapperConfig.class})
+@ContextConfiguration(classes = {ValidationAutoConfiguration.class, CachingService.class, SessionService.class, JsonFileReaderUtil.class, ObjectMapperConfig.class})
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 class SessionServiceTest{
 
@@ -49,6 +49,8 @@ class SessionServiceTest{
 	SessionRepository sessionRepository;
 	@Autowired
 	JsonFileReaderUtil jsonFileReaderUtil;
+	@MockBean
+	CachingService cachingService;
 
 	/***
 	 * test create method 
@@ -59,14 +61,13 @@ class SessionServiceTest{
 	void testCreate() throws Exception {
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 
 		// when
-		when(sessionMapper.toEntity(sessoinModel, user)).thenReturn(session);
+		when(sessionMapper.toEntity(sessoinModel)).thenReturn(session);
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
-		SessionType actual=underTest.create( user, sessoinModel);
+		SessionType actual=underTest.create(sessoinModel);
 
 		// then
 		assertNotNull(actual);
@@ -82,16 +83,16 @@ class SessionServiceTest{
 
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = null;
+		sessoinModel.setUserId(null);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 
 		// when
-		when(sessionMapper.toEntity(sessoinModel, user)).thenReturn(session);
+		when(sessionMapper.toEntity(sessoinModel)).thenReturn(session);
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.create( user, sessoinModel));
+		assertThrows(ConstraintViolationException.class, () -> underTest.create(sessoinModel));
 	}
 
 	/***
@@ -104,16 +105,15 @@ class SessionServiceTest{
 
 		// given
 		SessionType sessoinModel = null;		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 
 		// when
-		when(sessionMapper.toEntity(sessoinModel, user)).thenReturn(session);
+		when(sessionMapper.toEntity(sessoinModel)).thenReturn(session);
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.create( user, sessoinModel));
+		assertThrows(ConstraintViolationException.class, () -> underTest.create( sessoinModel));
 	}
 
 	/***
@@ -127,16 +127,15 @@ class SessionServiceTest{
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
 		sessoinModel.setTitle(null);
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 
 		// when
-		when(sessionMapper.toEntity(sessoinModel, user)).thenReturn(session);
+		when(sessionMapper.toEntity(sessoinModel)).thenReturn(session);
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.create( user, sessoinModel));
+		assertThrows(ConstraintViolationException.class, () -> underTest.create(sessoinModel));
 	}
 
 
@@ -150,8 +149,6 @@ class SessionServiceTest{
 	void testFindAll() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
-
 		Integer pageIndex = 1;
 		Integer pageSize = 10;
 
@@ -162,42 +159,16 @@ class SessionServiceTest{
 		Session session = sessions.stream().findFirst().orElse(null);
 
 		// when
-		when(sessionRepository.findAllByUserId(user.getUserId(), SessionHelper.getPageRequest(pageIndex, pageSize))).thenReturn(sessionpages);
+		when(sessionRepository.findAll(SessionHelper.getPageRequest(pageIndex, pageSize))).thenReturn(sessionpages);
 		when(sessionMapper.toModel(session)).thenReturn(sessionModel);
 
-		Page<SessionType> actual=underTest.findAll(user, pageIndex, pageSize);
+		Page<SessionType> actual=underTest.findAll(pageIndex, pageSize);
 
 		// then
 		assertNotNull(actual);
 		assertEquals(false, actual.isEmpty());
 	}
 
-	/***
-	 * test find all 
-	 * user is null
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	@Test
-	void testFindAllWithInvalidAuthenticatedUserCase() throws Exception {
-
-		// given
-		ApiUserType user = null;
-
-		Integer pageIndex = 1;
-		Integer pageSize = 10;
-
-		List<Session> sessions = (List<Session>) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data-list.json", new TypeReference<List<Session>>() {});
-		List<SessionType> sessionTypes = (List<SessionType>) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data-list.json", new TypeReference<List<SessionType>>() {});
-		SessionType sessionModel =  sessionTypes.stream().findFirst().orElse(null);		
-		Session session = sessions.stream().findFirst().orElse(null);
-
-		// when
-		when(sessionMapper.toModel(session)).thenReturn(sessionModel);
-
-		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(user, pageIndex, pageSize));
-	}
 
 	/***
 	 * test find all 
@@ -209,8 +180,6 @@ class SessionServiceTest{
 	void testFindAllWithInvalidPageIndexCase() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
-
 		Integer pageIndex = -1;
 		Integer pageSize = 10;
 
@@ -223,7 +192,7 @@ class SessionServiceTest{
 		when(sessionMapper.toModel(session)).thenReturn(sessionModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(user, pageIndex, pageSize));
+		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(pageIndex, pageSize));
 	}
 
 	/***
@@ -236,8 +205,6 @@ class SessionServiceTest{
 	void testFindAllWithInvalidPageSizeCase() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
-
 		Integer pageIndex = 1;
 		Integer pageSize = -1;
 
@@ -250,7 +217,7 @@ class SessionServiceTest{
 		when(sessionMapper.toModel(session)).thenReturn(sessionModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(user, pageIndex, pageSize));
+		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(pageIndex, pageSize));
 	}
 
 
@@ -263,43 +230,21 @@ class SessionServiceTest{
 	void testFindById() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json", Session.class);
 		String sessionId = session.getSessionId();
 		Optional<Session> sessionOptional = Optional.of(session);
 		SessionType sessionModel =  (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json", SessionType.class);
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenReturn(sessionOptional);
+		when(sessionRepository.findBySessionId(sessionId)).thenReturn(sessionOptional);
 		when(sessionMapper.toModel(session)).thenReturn(sessionModel);
 
-		SessionType actual=underTest.findById(user, sessionId);
+		SessionType actual=underTest.findById(sessionId);
 
 		// then
 		assertNotNull(actual);
 	}
 
-
-	/***
-	 * test find by id 
-	 * user is null
-	 * @throws Exception
-	 */
-	@Test
-	void testFindByIdWithInvalidAuthenticatedUserCase() throws Exception {
-
-		// given
-		ApiUserType user = null;
-		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json", Session.class);
-		String sessionId = session.getSessionId();
-		SessionType sessionModel =  (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json", SessionType.class);
-
-		// when
-		when(sessionMapper.toModel(session)).thenReturn(sessionModel);
-
-		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.findById(user, sessionId));
-	}
 
 	/***
 	 * test find by id 
@@ -310,7 +255,6 @@ class SessionServiceTest{
 	void testFindByIdWithInvalidSessionIdCase() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = null;
 		String sessionId = null;
 		SessionType sessionModel =  (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json", SessionType.class);
@@ -319,7 +263,7 @@ class SessionServiceTest{
 		when(sessionMapper.toModel(session)).thenReturn(sessionModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.findById(user, sessionId));
+		assertThrows(ConstraintViolationException.class, () -> underTest.findById(sessionId));
 	}
 
 	/***
@@ -331,17 +275,16 @@ class SessionServiceTest{
 	void testFindByIdWithNotExistSessionIdCase() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json", Session.class);
 		String sessionId = session.getSessionId();
 		SessionType sessionModel =  (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json", SessionType.class);
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenThrow(new ResourceNotFoundException(""));
+		when(sessionRepository.findBySessionId(sessionId)).thenThrow(new ResourceNotFoundException(""));
 		when(sessionMapper.toModel(session)).thenReturn(sessionModel);
 
 		// then
-		assertThrows(ResourceNotFoundException.class, () -> underTest.findById(user, sessionId));
+		assertThrows(ResourceNotFoundException.class, () -> underTest.findById( sessionId));
 	}
 
 	/***
@@ -353,42 +296,18 @@ class SessionServiceTest{
 	void testUpdate() throws Exception {
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		String sessionId = session.getSessionId();
 		Optional<Session> sessionOptional = Optional.of(session);
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenReturn(sessionOptional);
+		when(sessionRepository.findBySessionId(sessionId)).thenReturn(sessionOptional);
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
-		SessionType actual=underTest.update( user, sessionId, sessoinModel);
+		SessionType actual=underTest.update(sessionId, sessoinModel);
 
 		// then
 		assertNotNull(actual);
-	}
-
-	/***
-	 * test update method 
-	 * user is null
-	 * @throws Exception
-	 */
-	@Test
-	void testUpdateWithInvalidAuthenticatedUserCase() throws Exception {
-		// given
-		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = null;
-		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
-		String sessionId = session.getSessionId();
-		Optional<Session> sessionOptional = Optional.of(session);
-
-		// when
-		when(sessionRepository.findByUserIdAndSessionId(null, sessionId)).thenReturn(sessionOptional);
-		when(sessionRepository.save(session)).thenReturn(session);
-		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
-
-		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.update( user, sessionId, sessoinModel));
 	}
 
 
@@ -401,18 +320,17 @@ class SessionServiceTest{
 	void testUpdateWithInvalidSessionIdCase() throws Exception {
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = null;
 		String sessionId = null;
 		Optional<Session> sessionOptional = null;
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenReturn(sessionOptional);
+		when(sessionRepository.findBySessionId(sessionId)).thenReturn(sessionOptional);
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.update( user, sessionId, sessoinModel));
+		assertThrows(ConstraintViolationException.class, () -> underTest.update(sessionId, sessoinModel));
 	}
 
 	/***
@@ -424,17 +342,16 @@ class SessionServiceTest{
 	void testUpdateWithNotExistSessionIdCase() throws Exception {
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		String sessionId = session.getSessionId();
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenThrow(new ResourceNotFoundException(sessionId));
+		when(sessionRepository.findBySessionId(sessionId)).thenThrow(new ResourceNotFoundException(sessionId));
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ResourceNotFoundException.class, () -> underTest.update( user, sessionId, sessoinModel));
+		assertThrows(ResourceNotFoundException.class, () -> underTest.update(sessionId, sessoinModel));
 	}
 
 
@@ -447,18 +364,17 @@ class SessionServiceTest{
 	void testUpdateWithInvalidSessionRequestCase() throws Exception {
 		// given
 		SessionType sessoinModel = null;		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		String sessionId = session.getSessionId();
 		Optional<Session> sessionOptional = Optional.of(session);
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenReturn(sessionOptional);
+		when(sessionRepository.findBySessionId(sessionId)).thenReturn(sessionOptional);
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.update( user, sessionId, sessoinModel));
+		assertThrows(ConstraintViolationException.class, () -> underTest.update(sessionId, sessoinModel));
 	}
 
 
@@ -472,18 +388,17 @@ class SessionServiceTest{
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
 		sessoinModel.setTitle(null);
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		String sessionId = session.getSessionId();
 		Optional<Session> sessionOptional = Optional.of(session);
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenReturn(sessionOptional);
+		when(sessionRepository.findBySessionId(sessionId)).thenReturn(sessionOptional);
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.update( user, sessionId, sessoinModel));
+		assertThrows(ConstraintViolationException.class, () -> underTest.update(sessionId, sessoinModel));
 	}
 
 
@@ -496,46 +411,19 @@ class SessionServiceTest{
 	void testToggleFavorite() throws Exception {
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		String sessionId = session.getSessionId();
 		Optional<Session> sessionOptional = Optional.of(session);
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenReturn(sessionOptional);
+		when(sessionRepository.findBySessionId(sessionId)).thenReturn(sessionOptional);
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
-		SessionType actual=underTest.toggleFavorite( user, sessionId);
+		SessionType actual=underTest.toggleFavorite(sessionId);
 
 		// then
 		assertNotNull(actual);
 	}
-
-
-
-	/***
-	 * test toggleFavorite method 
-	 * user is null
-	 * @throws Exception
-	 */
-	@Test
-	void testToggleFavoriteWithInvalidAuthenticatedUserCase() throws Exception {
-		// given
-		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = null;
-		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
-		String sessionId = session.getSessionId();
-		Optional<Session> sessionOptional = Optional.of(session);
-
-		// when
-		when(sessionRepository.findByUserIdAndSessionId(null, sessionId)).thenReturn(sessionOptional);
-		when(sessionRepository.save(session)).thenReturn(session);
-		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
-
-		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.toggleFavorite( user, sessionId));
-	}
-
 
 	/***
 	 * test toggleFavorite method 
@@ -546,18 +434,17 @@ class SessionServiceTest{
 	void testToggleFavoriteWithInvalidSessionIdCase() throws Exception {
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = null;
 		String sessionId = null;
 		Optional<Session> sessionOptional = null;
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenReturn(sessionOptional);
+		when(sessionRepository.findBySessionId(sessionId)).thenReturn(sessionOptional);
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.toggleFavorite( user, sessionId));
+		assertThrows(ConstraintViolationException.class, () -> underTest.toggleFavorite(sessionId));
 	}
 
 	/***
@@ -569,17 +456,16 @@ class SessionServiceTest{
 	void testToggleFavoriteWithNotExistSessionIdCase() throws Exception {
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		String sessionId = session.getSessionId();
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenThrow(new ResourceNotFoundException(sessionId));
+		when(sessionRepository.findBySessionId(sessionId)).thenThrow(new ResourceNotFoundException(sessionId));
 		when(sessionRepository.save(session)).thenReturn(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ResourceNotFoundException.class, () -> underTest.toggleFavorite( user, sessionId));
+		assertThrows(ResourceNotFoundException.class, () -> underTest.toggleFavorite(sessionId));
 	}
 
 
@@ -592,47 +478,20 @@ class SessionServiceTest{
 	void testDelete() throws Exception {
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		String sessionId = session.getSessionId();
 		Optional<Session> sessionOptional = Optional.of(session);
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenReturn(sessionOptional);
+		when(sessionRepository.findBySessionId(sessionId)).thenReturn(sessionOptional);
 		doNothing().when(sessionRepository).delete(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
-		GenericResponseType<?> actual=underTest.delete( user, sessionId);
+		GenericResponseType<?> actual=underTest.delete( sessionId);
 
 		// then
 		assertNotNull(actual);
 	}
 
-	
-
-	/***
-	 * test delete method 
-	 * user is null
-	 * @throws Exception
-	 */
-	@Test
-	void testDeleteWithInvalidAuthenticatedUserCase() throws Exception {
-		// given
-		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = null;
-		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
-		String sessionId = session.getSessionId();
-		Optional<Session> sessionOptional = Optional.of(session);
-
-		// when
-		when(sessionRepository.findByUserIdAndSessionId(null, sessionId)).thenReturn(sessionOptional);
-		doNothing().when(sessionRepository).delete(session);
-		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
-
-		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.delete( user, sessionId));
-	}
-
-	
 	/***
 	 * test delete method 
 	 * session id is null
@@ -642,18 +501,17 @@ class SessionServiceTest{
 	void testDeleteWithInvalidSessionIdCase() throws Exception {
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = null;
 		String sessionId = null;
 		Optional<Session> sessionOptional = null;
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenReturn(sessionOptional);
+		when(sessionRepository.findBySessionId(sessionId)).thenReturn(sessionOptional);
 		doNothing().when(sessionRepository).delete(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.delete( user, sessionId));
+		assertThrows(ConstraintViolationException.class, () -> underTest.delete( sessionId));
 	}
 	
 	
@@ -666,17 +524,16 @@ class SessionServiceTest{
 	void testDeleteWithNotExistSessionIdCase() throws Exception {
 		// given
 		SessionType sessoinModel = (SessionType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/model-data.json",SessionType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		String sessionId = session.getSessionId();
 
 		// when
-		when(sessionRepository.findByUserIdAndSessionId(user.getUserId(), sessionId)).thenThrow(new ResourceNotFoundException(sessionId));
+		when(sessionRepository.findBySessionId(sessionId)).thenThrow(new ResourceNotFoundException(sessionId));
 		doNothing().when(sessionRepository).delete(session);
 		when(sessionMapper.toModel(session)).thenReturn(sessoinModel);
 
 		// then
-		assertThrows(ResourceNotFoundException.class, () -> underTest.delete( user, sessionId));
+		assertThrows(ResourceNotFoundException.class, () -> underTest.delete(sessionId));
 	}
 
 }

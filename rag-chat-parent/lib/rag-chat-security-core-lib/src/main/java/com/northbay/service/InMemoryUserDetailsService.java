@@ -30,12 +30,11 @@ public class InMemoryUserDetailsService implements UserDetailsService  {
 	@PostConstruct
 	public void init() {
 		inMemoryUserDetailsMap = Arrays.stream(apiKeys.split(","))
-        .map(entry -> entry.split(":"))
         .map(this::mapInMemoryUserDetails)
 		.collect(Collectors.toMap(apiUser -> apiUser.getApiKey(), apiUser -> apiUser));
 	}
 
-	private ApiUserType mapInMemoryUserDetails(String[] user) {
+	private ApiUserType mapInMemoryUserDetails(String user) {
 		return getApiUserType(user);
 	}
 

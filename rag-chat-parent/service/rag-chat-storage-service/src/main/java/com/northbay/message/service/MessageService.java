@@ -18,7 +18,6 @@ import com.northbay.message.entity.Message;
 import com.northbay.message.mapper.MessageMapper;
 import com.northbay.message.model.MessageType;
 import com.northbay.message.repository.MessageRepository;
-import com.northbay.model.ApiUserType;
 import com.northbay.session.entity.Session;
 import com.northbay.session.service.SessionService;
 
@@ -37,9 +36,8 @@ public class MessageService {
 	 * @param request
 	 */
 	public MessageType create(@Valid @NotNull(message = FIELD_IS_MANDATORY) MessageType request, 
-			@NotNull(message = FIELD_IS_MANDATORY) ApiUserType user, 
 			@NotBlank(message = FIELD_IS_MANDATORY) String sessionId) {
-		return toModel(save(toEntity(request, getSession(user, sessionId))));
+		return toModel(save(toEntity(request, getSession(sessionId))));
 	}
 
 	/***
@@ -50,10 +48,9 @@ public class MessageService {
 	 * @return
 	 */
 	public Page<MessageType> findAll(@NotBlank(message = FIELD_IS_MANDATORY) String sessionId, 
-			@NotNull(message = FIELD_IS_MANDATORY) ApiUserType user, 
 			@Min(value = 1, message = FIELD_IS_MIN_1) Integer pageIndex, 
 			@Min(value = 1, message = FIELD_IS_MIN_1) Integer pageSize) {
-		return toModelList(findAllBySession(getPageRequest(pageIndex, pageSize), findBySessionId(sessionId, user)));
+		return toModelList(findAllBySession(getPageRequest(pageIndex, pageSize), findBySessionId(sessionId)));
 	}
 	
 	
@@ -81,8 +78,8 @@ public class MessageService {
 	 * @param sessionId
 	 * @return
 	 */
-	private Session getSession(ApiUserType user, String sessionId) {
-		return sessionService.findByUserIdAndSessionId(user, sessionId);
+	private Session getSession(String sessionId) {
+		return sessionService.findBySessionId(sessionId);
 	}
 	
 	/***
@@ -109,8 +106,8 @@ public class MessageService {
 	 * @param user
 	 * @return
 	 */
-	private Session findBySessionId(String sessionId, ApiUserType user) {
-		return sessionService.findByUserIdAndSessionId(user, sessionId);
+	private Session findBySessionId(String sessionId) {
+		return sessionService.findBySessionId(sessionId);
 	}
 	
 	/***

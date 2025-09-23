@@ -17,7 +17,6 @@ import static com.northbay.message.constant.MessageConstants.SESSION_API_AUTH;
 
 import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,11 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.northbay.common.controller.AbstractChatController;
 import com.northbay.message.model.MessageType;
 import com.northbay.message.service.MessageService;
-import com.northbay.model.ApiUserType;
 import com.northbay.session.model.SessionType;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -59,10 +56,9 @@ public class MessageController extends AbstractChatController {
 			schema = @Schema(implementation = SessionType.class))))
 	@PostMapping(CREATE_MESSAGE_API_PATH)
 	@PreAuthorize(SESSION_API_AUTH)
-	public MessageType create(@Parameter(hidden = true) @AuthenticationPrincipal ApiUserType authenticatedUser, 
-			@RequestBody MessageType request,
+	public MessageType create(@RequestBody MessageType request,
 			@PathVariable String sessionId) {
-		return messageService.create(request, authenticatedUser, sessionId);
+		return messageService.create(request, sessionId);
 	}
 
 	@Operation(summary = FIND_ALL_MESSAGES_API, 
@@ -73,10 +69,9 @@ public class MessageController extends AbstractChatController {
 			schema = @Schema(implementation = MessageType.class)) }) })
 	@GetMapping(CREATE_MESSAGE_API_PATH)
 	@PreAuthorize(SESSION_API_AUTH)
-	public Page<MessageType> findAll(@Parameter(hidden = true) @AuthenticationPrincipal ApiUserType authenticatedUser,		
-			@RequestParam(required = false, defaultValue = "1") Integer pageIndex, 
+	public Page<MessageType> findAll(@RequestParam(required = false, defaultValue = "1") Integer pageIndex, 
 			@RequestParam(required = false, defaultValue = "10") Integer pageSize,	
 			@PathVariable String sessionId) {
-		return messageService.findAll(sessionId, authenticatedUser, pageIndex, pageSize);
+		return messageService.findAll(sessionId,pageIndex, pageSize);
 	}
 }

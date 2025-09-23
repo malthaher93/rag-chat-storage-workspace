@@ -34,7 +34,12 @@ public class SessionType implements Serializable {
 	@Schema(name = "Session_Title", description = "Title of the session", required = true, type = "String", readOnly = true)
 	@NotBlank(message = FIELD_IS_MANDATORY)
 	private String title;
-
+	
+	@JsonProperty("USER_ID")
+	@Schema(name = "USER_ID", description = "Id of the user", required = true, type = "String", readOnly = true)
+	@NotBlank(message = FIELD_IS_MANDATORY)
+	private String userId;
+	
 	@JsonProperty("Favorite")
 	@Schema(name = "Favorite", description = "A flag indicate to the session is favorite or not", required = true, type = "Boolean", readOnly = true)
 	private Boolean favorite;

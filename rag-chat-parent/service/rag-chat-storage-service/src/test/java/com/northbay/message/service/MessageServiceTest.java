@@ -28,7 +28,6 @@ import com.northbay.message.entity.Message;
 import com.northbay.message.mapper.MessageMapper;
 import com.northbay.message.model.MessageType;
 import com.northbay.message.repository.MessageRepository;
-import com.northbay.model.ApiUserType;
 import com.northbay.session.entity.Session;
 import com.northbay.session.service.SessionService;
 import com.northbay.session.util.SessionHelper;
@@ -60,17 +59,16 @@ class MessageServiceTest{
 	void testCreate() throws Exception {
 		// given
 		MessageType messageModel = (MessageType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/model-data.json",MessageType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		Message message = (Message) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/entity-data.json",Message.class);
 		String sessionId = session.getSessionId();
 
 		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
+		when(sessionService.findBySessionId(sessionId)).thenReturn(session);
 		when(messageMapper.toEntity(messageModel, session)).thenReturn(message);
 		when(messageRepository.save(message)).thenReturn(message);
 		when(messageMapper.toModel(message)).thenReturn(messageModel);
-		MessageType actual=underTest.create(messageModel, user, sessionId);
+		MessageType actual=underTest.create(messageModel, sessionId);
 
 		// then
 		assertNotNull(actual);
@@ -86,19 +84,18 @@ class MessageServiceTest{
 		// given
 		MessageType messageModel = (MessageType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/model-data.json",MessageType.class);		
 		messageModel.setSender(null);
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		Message message = (Message) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/entity-data.json",Message.class);
 		String sessionId = session.getSessionId();
 
 		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
+		when(sessionService.findBySessionId(sessionId)).thenReturn(session);
 		when(messageMapper.toEntity(messageModel, session)).thenReturn(message);
 		when(messageRepository.save(message)).thenReturn(message);
 		when(messageMapper.toModel(message)).thenReturn(messageModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.create(messageModel, user, sessionId));
+		assertThrows(ConstraintViolationException.class, () -> underTest.create(messageModel, sessionId));
 	}
 
 	/***
@@ -111,19 +108,18 @@ class MessageServiceTest{
 		// given
 		MessageType messageModel = (MessageType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/model-data.json",MessageType.class);		
 		messageModel.setContent(null);
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		Message message = (Message) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/entity-data.json",Message.class);
 		String sessionId = session.getSessionId();
 
 		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
+		when(sessionService.findBySessionId(sessionId)).thenReturn(session);
 		when(messageMapper.toEntity(messageModel, session)).thenReturn(message);
 		when(messageRepository.save(message)).thenReturn(message);
 		when(messageMapper.toModel(message)).thenReturn(messageModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.create(messageModel, user, sessionId));
+		assertThrows(ConstraintViolationException.class, () -> underTest.create(messageModel, sessionId));
 	}
 
 	/***
@@ -135,44 +131,18 @@ class MessageServiceTest{
 	void testCreateWithInvalidMessageRequestCase() throws Exception {
 
 		MessageType messageModel = null;		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		Message message = (Message) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/entity-data.json",Message.class);
 		String sessionId = session.getSessionId();
 
 		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
+		when(sessionService.findBySessionId(sessionId)).thenReturn(session);
 		when(messageMapper.toEntity(messageModel, session)).thenReturn(message);
 		when(messageRepository.save(message)).thenReturn(message);
 		when(messageMapper.toModel(message)).thenReturn(messageModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.create(messageModel, user, sessionId));
-	}
-
-	/***
-	 * test create method
-	 * api user is null
-	 * @throws Exception
-	 */
-	@Test
-	void testCreateWithInvalidAuthenticatedUserCase() throws Exception {
-
-		// given
-		MessageType messageModel = (MessageType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/model-data.json",MessageType.class);		
-		ApiUserType user = null;
-		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
-		Message message = (Message) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/entity-data.json",Message.class);
-		String sessionId = session.getSessionId();
-
-		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
-		when(messageMapper.toEntity(messageModel, session)).thenReturn(message);
-		when(messageRepository.save(message)).thenReturn(message);
-		when(messageMapper.toModel(message)).thenReturn(messageModel);
-
-		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.create(messageModel, user, sessionId));
+		assertThrows(ConstraintViolationException.class, () -> underTest.create(messageModel, sessionId));
 	}
 
 	/***
@@ -185,19 +155,18 @@ class MessageServiceTest{
 
 		// given
 		MessageType messageModel = (MessageType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/model-data.json",MessageType.class);		
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = null;
 		Message message = (Message) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/entity-data.json",Message.class);
 		String sessionId = null;
 
 		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
+		when(sessionService.findBySessionId(sessionId)).thenReturn(session);
 		when(messageMapper.toEntity(messageModel, session)).thenReturn(message);
 		when(messageRepository.save(message)).thenReturn(message);
 		when(messageMapper.toModel(message)).thenReturn(messageModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.create(messageModel, user, sessionId));
+		assertThrows(ConstraintViolationException.class, () -> underTest.create(messageModel, sessionId));
 	}
 
 	/***
@@ -210,7 +179,6 @@ class MessageServiceTest{
 	void testFindAll() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		String sessionId = session.getSessionId();
 
@@ -224,11 +192,11 @@ class MessageServiceTest{
 		Message message = messages.stream().findFirst().orElse(null);
 
 		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
+		when(sessionService.findBySessionId(sessionId)).thenReturn(session);
 		when(messageRepository.findAllBySession(session, SessionHelper.getPageRequest(pageIndex, pageSize))).thenReturn(messagepages);
 		when(messageMapper.toModel(message)).thenReturn(messageModel);
 
-		Page<MessageType> actual=underTest.findAll(sessionId, user, pageIndex, pageSize);
+		Page<MessageType> actual=underTest.findAll(sessionId, pageIndex, pageSize);
 		// then
 
 		assertNotNull(actual);
@@ -245,7 +213,6 @@ class MessageServiceTest{
 	void testFindAllWithInvalidSessionIdCase() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 		String sessionId = session.getSessionId();
 
@@ -259,12 +226,12 @@ class MessageServiceTest{
 		Message message = messages.stream().findFirst().orElse(null);
 
 		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenThrow(new ResourceNotFoundException(""));
+		when(sessionService.findBySessionId(sessionId)).thenThrow(new ResourceNotFoundException(""));
 		when(messageRepository.findAllBySession(session, SessionHelper.getPageRequest(pageIndex, pageSize))).thenReturn(messagepages);
 		when(messageMapper.toModel(message)).thenReturn(messageModel);
 
 		// then
-		assertThrows(ResourceNotFoundException.class, () -> underTest.findAll(sessionId, user, pageIndex, pageSize));	
+		assertThrows(ResourceNotFoundException.class, () -> underTest.findAll(sessionId, pageIndex, pageSize));	
 	}
 	
 	/***
@@ -277,7 +244,6 @@ class MessageServiceTest{
 	void testFindAllWithMissedSessionIdCase() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = null;
 		String sessionId = null;
 
@@ -291,46 +257,13 @@ class MessageServiceTest{
 		Message message = messages.stream().findFirst().orElse(null);
 
 		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
+		when(sessionService.findBySessionId(sessionId)).thenReturn(session);
 		when(messageRepository.findAllBySession(session, SessionHelper.getPageRequest(pageIndex, pageSize))).thenReturn(messagepages);
 		when(messageMapper.toModel(message)).thenReturn(messageModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(sessionId, user, pageIndex, pageSize));	
+		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(sessionId,  pageIndex, pageSize));	
 	}
-
-	/***
-	 * test find All 
-	 * user is null
-	 * @throws Exception
-	 */
-	@SuppressWarnings("unchecked")
-	@Test
-	void testFindAllWithInvalidAuthenticatedUserCase() throws Exception {
-
-		// given
-		ApiUserType user = null;
-		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
-		String sessionId = session.getSessionId();
-
-		Integer pageIndex = 1;
-		Integer pageSize = 10;
-
-		List<Message> messages = (List<Message>) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/entity-data-list.json", new TypeReference<List<Message>>() {});
-		Page<Message> messagepages = new PageImpl<>(messages, SessionHelper.getPageRequest(pageIndex, pageSize), messages.size());
-		List<MessageType> messageTypes = (List<MessageType>) jsonFileReaderUtil.loadTestData("src/test/resources/mock/message/model-data-list.json", new TypeReference<List<MessageType>>() {});
-		MessageType messageModel =  messageTypes.stream().findFirst().orElse(null);		
-		Message message = messages.stream().findFirst().orElse(null);
-
-		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
-		when(messageRepository.findAllBySession(session, SessionHelper.getPageRequest(pageIndex, pageSize))).thenReturn(messagepages);
-		when(messageMapper.toModel(message)).thenReturn(messageModel);
-
-		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(sessionId, user, pageIndex, pageSize));	
-	}
-
 
 	/***
 	 * test find all
@@ -342,7 +275,6 @@ class MessageServiceTest{
 	void testFindAllWithInvalidPageIndexCase() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 
 		String sessionId = session.getSessionId();
@@ -356,11 +288,11 @@ class MessageServiceTest{
 		Message message = messages.stream().findFirst().orElse(null);
 
 		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
+		when(sessionService.findBySessionId(sessionId)).thenReturn(session);
 		when(messageMapper.toModel(message)).thenReturn(messageModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(sessionId, user, pageIndex, pageSize));	
+		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(sessionId, pageIndex, pageSize));	
 	}
 
 	/***
@@ -373,7 +305,6 @@ class MessageServiceTest{
 	void testFindAllWithInvalidPageSizeCase() throws Exception {
 
 		// given
-		ApiUserType user = (ApiUserType) jsonFileReaderUtil.loadTestData("src/test/resources/mock/apiuser/api-user.json",ApiUserType.class);
 		Session session = (Session) jsonFileReaderUtil.loadTestData("src/test/resources/mock/session/entity-data.json",Session.class);
 
 		String sessionId = session.getSessionId();
@@ -387,11 +318,11 @@ class MessageServiceTest{
 		Message message = messages.stream().findFirst().orElse(null);
 
 		// when
-		when(sessionService.findByUserIdAndSessionId(user, sessionId)).thenReturn(session);
+		when(sessionService.findBySessionId(sessionId)).thenReturn(session);
 		when(messageMapper.toModel(message)).thenReturn(messageModel);
 
 		// then
-		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(sessionId, user, pageIndex, pageSize));	
+		assertThrows(ConstraintViolationException.class, () -> underTest.findAll(sessionId, pageIndex, pageSize));	
 	}
 
 }

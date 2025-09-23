@@ -104,11 +104,11 @@ release     -- used on development,staging and production environment
 #### API key authentication application user
 in memeory users used for api authentication for business logic endpoints, defined in the APP_API_KEYS property in env file
 ```
-    APP_API_KEYS = fb939c58-6721-43d4-a521-7079d5ba6a7a:user-01, 576c5d84-fcab-44d4-858a-cd17f64aa085:user-02
+    APP_API_KEYS = fb939c58-6721-43d4-a521-7079d5ba6a7a, 576c5d84-fcab-44d4-858a-cd17f64aa085
 
     that means will create 2 in memory user 
-    1. user id : user-01 , api key : fb939c58-6721-43d4-a521-7079d5ba6a7a
-    2. user id : user-02 , api key : 576c5d84-fcab-44d4-858a-cd17f64aa085
+    1. api key : fb939c58-6721-43d4-a521-7079d5ba6a7a
+    2. api key : 576c5d84-fcab-44d4-858a-cd17f64aa085
 ```
 #### Database user
 database user for database access, defined in the docker-compose yml file

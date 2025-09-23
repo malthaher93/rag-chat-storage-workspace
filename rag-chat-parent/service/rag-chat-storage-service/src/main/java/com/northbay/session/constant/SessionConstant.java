@@ -13,11 +13,11 @@ public class SessionConstant {
 
 	public static final String SESSION_CONTROLLER = "Session Controller";
 
-	public static final String OBJECT_EXAMPLE_CREATE_SESSION_API_RESP = "{\"Session_Id\" : \"XXX-XXX-XXX-XXX\", \"Session_Title\" : \"Test\", \"Favorite\" : false}";
+	public static final String OBJECT_EXAMPLE_CREATE_SESSION_API_RESP = "{\"Session_Id\" : \"XXX-XXX-XXX-XXX\", \"Session_Title\" : \"Test\", \"Favorite\" : false, \"USER_ID\": \"test-01\"}";
 	
 	public static final String OBJECT_EXAMPLE_DELETE_SESSION_API_RESP = "{\"status\": \"SUCCESS\",\"httpStatus\": \"OK\", \"infoDescription\": \"Sucessfully deleted\",\"responseDateTime\": \"2025-09-20 18:13:03\"	}";
 	
-	public static final String OBJECT_EXAMPLE_CREATE_SESSION_API_REQ = "{\"Session_Title\" : \"Test\"}";
+	public static final String OBJECT_EXAMPLE_CREATE_SESSION_API_REQ = "{\"Session_Title\" : \"Test\", \"USER_ID\": \"test-01\"}";
 	
 	public static final String TOGGLE_FAVORITE_SESSION_API_PATH = "{sessionId}/favorite";
 

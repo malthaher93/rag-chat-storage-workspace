@@ -22,6 +22,6 @@ cors:
     
 #security auth users
 security:
-  api-keys: fb939c58-6721-43d4-a521-7079d5ba6a7a:user-01, 576c5d84-fcab-44d4-858a-cd17f64aa085:user-02
+  api-keys: fb939c58-6721-43d4-a521-7079d5ba6a7a,576c5d84-fcab-44d4-858a-cd17f64aa085
     
 

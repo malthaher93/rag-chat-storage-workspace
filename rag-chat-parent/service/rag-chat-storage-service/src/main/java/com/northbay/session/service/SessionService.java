@@ -5,7 +5,8 @@ import static com.northbay.constants.GlobalConstants.FIELD_IS_MIN_1;
 import static com.northbay.session.constant.SessionConstant.REQUESTED_RESOURCE_NOT_FOUND;
 import static com.northbay.session.constant.SessionConstant.SUCESSFULLY_DELETED;
 import static com.northbay.session.util.SessionHelper.getPageRequest;
-import static com.northbay.session.util.SessionHelper.getUserId;
+
+import java.util.UUID;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
 import com.northbay.exception.ResourceNotFoundException;
-import com.northbay.model.ApiUserType;
 import com.northbay.model.GenericResponseType;
 import com.northbay.service.CachingService;
 import com.northbay.session.entity.Session;
@@ -38,28 +38,26 @@ public class SessionService {
 	private final SessionRepository sessionRepository;
 	private final SessionMapper sessionMapper;
 	private final CachingService cachingService;
-
+	
 	/***
 	 * create a new session
 	 * @param request
 	 */
-	public SessionType create(@NotNull(message = FIELD_IS_MANDATORY) ApiUserType user, 
-			@Valid @NotNull(message = FIELD_IS_MANDATORY) SessionType request) {
-		return toModel(save(toEntity(user, request)));
+	public SessionType create(@Valid @NotNull(message = FIELD_IS_MANDATORY) SessionType request) {
+		return toModel(save(toEntity(request)));
 	}
 	
 	/***
-	 * find all sessions related to the logged in user
+	 * find all sessions
 	 * @param user
 	 * @param pageIndex
 	 * @param pageSize
 	 * @return
 	 */
 	
-	public Page<SessionType> findAll(@NotNull(message = FIELD_IS_MANDATORY) ApiUserType user, 
-			@Min(value = 1, message = FIELD_IS_MIN_1) Integer pageIndex, 
-			@Min(value = 1, message = FIELD_IS_MIN_1) Integer pageSize) { 
-		return toModelList(findAllByUserId(user, pageIndex, pageSize));
+	public Page<SessionType> findAll(@Min(value = 1, message = FIELD_IS_MIN_1) Integer pageIndex, 
+			@Min(value = 1, message = FIELD_IS_MIN_1) Integer pageSize) {
+		return toModelList(sessionRepository.findAll(getPageRequest(pageIndex, pageSize)));
 	}
 	
 	/***
@@ -67,9 +65,8 @@ public class SessionService {
 	 * @param sessionId
 	 * @return
 	 */
-	public SessionType findById(@NotNull(message = FIELD_IS_MANDATORY) ApiUserType user, 
-			@NotBlank(message = FIELD_IS_MANDATORY) String sessionId) {
-		return toModel(findByUserIdAndSessionId(user, sessionId));   		
+	public SessionType findById(@NotBlank(message = FIELD_IS_MANDATORY) String sessionId) {
+		return toModel(findBySessionId(sessionId));   		
 	}
 	
 	/***
@@ -77,10 +74,9 @@ public class SessionService {
 	 * @param sessionId
 	 * @param request
 	 */
-	public SessionType update(@NotNull(message = FIELD_IS_MANDATORY) ApiUserType user, 
-			@NotBlank(message = FIELD_IS_MANDATORY) String sessionId, 
+	public SessionType update(@NotBlank(message = FIELD_IS_MANDATORY) String sessionId, 
 			@Valid @NotNull(message = FIELD_IS_MANDATORY) SessionType request) {
-		Session session = findByUserIdAndSessionId(user, sessionId);
+		Session session = findBySessionId(sessionId);
 		session.setTitle(request.getTitle());
 		return toModel(save(session));	
 	}
@@ -89,9 +85,8 @@ public class SessionService {
 	 * toggle favorite session and update it into database
 	 * @param sessionId
 	 */
-	public SessionType toggleFavorite(@NotNull(message = FIELD_IS_MANDATORY) ApiUserType user, 
-			@NotBlank(message = FIELD_IS_MANDATORY) String sessionId) {
-		Session session = findByUserIdAndSessionId(user, sessionId);
+	public SessionType toggleFavorite(@NotBlank(message = FIELD_IS_MANDATORY) String sessionId) {
+		Session session = findBySessionId(sessionId);
 		session.setFavorite(!session.getFavorite());
 		return toModel(save(session));	
 	}
@@ -100,11 +95,10 @@ public class SessionService {
 	 * delete session from database
 	 * @param sessionId
 	 */
-	public GenericResponseType<?> delete(@NotNull(message = FIELD_IS_MANDATORY) ApiUserType user, 
-			@NotBlank(message = FIELD_IS_MANDATORY) String sessionId) {
+	public GenericResponseType<?> delete(@NotBlank(message = FIELD_IS_MANDATORY) String sessionId) {
 		
-		sessionRepository.delete(findByUserIdAndSessionId(user, sessionId));
-		cachingService.evictAll();
+		sessionRepository.delete(findBySessionId(sessionId));
+		cachingService.evictByCacheNameAndKey("SessionDataCacheMap", sessionId);
 		return ResponseUtil.getInfoGenericResponse(HttpStatus.OK, SUCESSFULLY_DELETED);
 	}
 	
@@ -115,9 +109,8 @@ public class SessionService {
 	 * @return
 	 */
 	@Cacheable(value = "SessionDataCacheMap", unless = "#result == null")
-	public Session findByUserIdAndSessionId(@NotNull(message = FIELD_IS_MANDATORY) ApiUserType user, 
-			@NotBlank(message = FIELD_IS_MANDATORY) String sessionId) {
-		return sessionRepository.findByUserIdAndSessionId(getUserId(user), sessionId)
+	public Session findBySessionId(@NotBlank(message = FIELD_IS_MANDATORY) String sessionId) {
+		return sessionRepository.findBySessionId(sessionId)
 				.orElseThrow(() -> new ResourceNotFoundException(REQUESTED_RESOURCE_NOT_FOUND));
 	}
 
@@ -127,19 +120,10 @@ public class SessionService {
 	 * @param request
 	 * @return
 	 */
-	private Session toEntity(ApiUserType user, SessionType request) {
-		return sessionMapper.toEntity(request, user);
-	}
-
-	/***
-	 * find all sessions by user id
-	 * @param user
-	 * @param pageIndex
-	 * @param pageSize
-	 * @return
-	 */
-	private Page<Session> findAllByUserId(ApiUserType user, Integer pageIndex, Integer pageSize) {
-		return sessionRepository.findAllByUserId(getUserId(user), getPageRequest(pageIndex, pageSize));
+	private Session toEntity(SessionType request) {
+		Session session = sessionMapper.toEntity(request);
+		session.setSessionId(UUID.randomUUID().toString());		
+		return session;
 	}
 
 	/***
