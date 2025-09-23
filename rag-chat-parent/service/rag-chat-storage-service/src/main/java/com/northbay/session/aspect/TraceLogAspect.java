@@ -10,6 +10,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 @Aspect
 @Component("SessionTraceLog")
 @RequiredArgsConstructor
+@Profile("!test")
 public class TraceLogAspect {
 
 	private static final Logger LOG = LoggerFactory.getLogger(SessionService.class);
