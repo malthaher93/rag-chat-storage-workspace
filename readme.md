@@ -133,19 +133,35 @@ client user for to access PGAdmin application, defined in the docker-compose yml
     *RATE_LIMIT_REFRESH_PERIOD   -- determine refresh period of rate limit in second | DEFAULT : 1
     *RATE_LIMIT_TIMEOUT          -- determine timeout period of rate limit in milli second | DEFAULT : 0
     *CORS_ALLOWED_ORIGIN         -- determine allowed origin/hostname to invoke the application endpoints | DEFAULT : *
-    *APP_API_KEYS                -- determine in memory user by define api key and user id in the following syntax api_key:user_id | DEFAULT : 2 users with example fb939c58-6721-43d4-a521-7079d5ba6a7a:user-01, 576c5d84-fcab-44d4-858a-cd17f64aa085:user-02
+    *APP_API_KEYS                -- determine in memory user by define api key and user id in the following syntax api_keys with comma seperator | DEFAULT : 2 users with example fb939c58-6721-43d4-a521-7079d5ba6a7a,576c5d84-fcab-44d4-858a-cd17f64aa085
+    *POSTGRES_USER               -- determine username of PostgreSQL database | DEFAULT : test
+    *POSTGRES_PASSWORD           -- determine password of PostgreSQL database | DEFAULT : test
+    *POSTGRES_DB                 -- determine name of PostgreSQL database | DEFAULT : ragchat
+    *PGADMIN_DEFAULT_EMAIL       -- determine email of PGADMIN user | DEFAULT : test@test.com
+    *PGADMIN_DEFAULT_PASSWORD    -- determine password of PGADMIN user | DEFAULT : test
+    *ELASTICSEARCH_HOSTS         -- determine ip and port of elasticsearch | DEFAULT : http://elasticsearch:9200
+    *LOGSTASH_SERVER=            -- determine ip and port of logstash | DEFAULT : logstash:5000
+
+    
 ```
 #### Example  ::
 ```
-    *SERVICE_PORT =  8081
-    *DATASOUCE_URL = jdbc:postgresql://database:5432/ragchat
-    *DATASOUCE_USER_NAME = test
-    *DATASOUCE_PASSWORD = test
-    *RATE_LIMIT_COUNT =  5
-    *RATE_LIMIT_REFRESH_PERIOD = 1
-    *RATE_LIMIT_TIMEOUT = 0
-    *CORS_ALLOWED_ORIGIN = *
-    *APP_API_KEYS = fb939c58-6721-43d4-a521-7079d5ba6a7a:user-01, 576c5d84-fcab-44d4-858a-cd17f64aa085:user-02
+    *SERVICE_PORT=8081
+    *DATASOUCE_URL=jdbc:postgresql://database:5432/ragchat
+    *DATASOUCE_USER_NAME=test
+    *DATASOUCE_PASSWORD=test
+    *RATE_LIMIT_COUNT=5
+    *RATE_LIMIT_REFRESH_PERIOD=1
+    *RATE_LIMIT_TIMEOUT=0
+    *CORS_ALLOWED_ORIGIN='*'
+    *APP_API_KEYS=fb939c58-6721-43d4-a521-7079d5ba6a7a,    576c5d84-fcab-44d4-858a-cd17f64aa085
+    *POSTGRES_USER=test
+    *POSTGRES_PASSWORD=test
+    *POSTGRES_DB=ragchat
+    *PGADMIN_DEFAULT_EMAIL=test@test.com
+    *PGADMIN_DEFAULT_PASSWORD=test
+    *ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    *LOGSTASH_SERVER=logstash:5000
 ```
 
 ## Deployment
